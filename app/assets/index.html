@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>FocusGuard 專注番茄鐘</title>
+    <link rel="stylesheet" href="style.css?v=focus-1" />
+  </head>
+  <body>
+    <main class="page-shell">
+      <header class="hero">
+        <p class="eyebrow">Arduino UNO Q｜AIoT 期中專題</p>
+        <h1>FocusGuard 專注番茄鐘</h1>
+        <p class="lead">UNO Q 在板子上偵測你在不在座位：人在就倒數，離開就自動暫停。影像只在筆電和 UNO Q 之間傳送，不上雲、不存檔。</p>
+      </header>
+
+      <section class="pomo-card" id="pomoCard" data-state="idle" aria-labelledby="pomo-title">
+        <div class="pomo-main">
+          <p class="step" id="pomo-title">番茄鐘</p>
+          <p class="pomo-state" id="pomoState">尚未開始</p>
+          <p class="pomo-time" id="pomoTime" aria-live="polite">01:00</p>
+          <div class="pomo-bar" aria-hidden="true"><div id="pomoBar"></div></div>
+          <p class="pomo-hint" id="pomoHint">先在下方開始辨識，再按「開始專注」。</p>
+          <div class="button-row">
+            <button id="pomoStart" class="primary" type="button">開始專注</button>
+            <button id="pomoReset" class="secondary" type="button">重設</button>
+            <label class="demo-toggle"><input id="pomoDemo" type="checkbox" checked /> 示範模式（專注 1 分鐘／休息 20 秒）</label>
+          </div>
+        </div>
+        <div class="pomo-stats">
+          <article class="stat-item">
+            <p>今日專注</p>
+            <strong id="pomoFocusTotal">00:00</strong>
+            <span>坐在座位上的累計時間</span>
+          </article>
+          <article class="stat-item">
+            <p>完成番茄</p>
+            <strong id="pomoCount">0 個</strong>
+            <span>完整專注完的次數</span>
+          </article>
+          <article class="stat-item">
+            <p>暫離次數</p>
+            <strong id="pomoAway">0 次</strong>
+            <span>專注中離開座位的次數</span>
+          </article>
+          <article class="stat-item ai-stat">
+            <p>AI 偵測</p>
+            <strong id="pomoPresence">—</strong>
+            <span id="pomoDetail">等待板子回報</span>
+          </article>
+        </div>
+      </section>
+
+      <section class="control-card" aria-labelledby="control-title">
+        <div>
+          <h2 id="control-title">1. 選擇攝影機</h2>
+          <p class="hint">可以選筆電內建攝影機，也可以選 IPEVO。瀏覽器第一次使用時會詢問權限。</p>
+        </div>
+
+        <label for="cameraSelect">攝影機</label>
+        <select id="cameraSelect">
+          <option value="">正在尋找攝影機…</option>
+        </select>
+
+        <div class="button-row">
+          <button id="startButton" class="primary" type="button">開始辨識</button>
+          <button id="externalButton" class="secondary" type="button" title="畫面改由 mac-sender 的 Python 程式送，這一頁只負責顯示結果">用 Python 送</button>
+          <button id="stopButton" class="secondary" type="button" disabled>停止</button>
+        </div>
+
+        <div class="status-grid" aria-live="polite">
+          <p><span class="status-dot" id="cameraDot"></span><strong>筆電攝影機：</strong><span id="cameraStatus">尚未開始</span></p>
+          <p><span class="status-dot" id="usbDot"></span><strong>USB 影像傳送：</strong><span id="usbStatus">等待連線</span></p>
+          <p><span class="status-dot" id="frameDot"></span><strong>送出畫面：</strong><span id="frameStatus">0 張</span></p>
+        </div>
+      </section>
+
+      <section class="stats-card" aria-labelledby="stats-title">
+        <div class="stats-heading">
+          <div>
+            <p class="step">即時統計</p>
+            <h2 id="stats-title">現在跑得怎麼樣？</h2>
+          </div>
+          <p>每秒更新一次</p>
+        </div>
+
+        <div class="stats-grid" aria-live="polite">
+          <article class="stat-item">
+            <p>送出速度</p>
+            <strong id="sendFpsValue">0.0 FPS</strong>
+            <span id="boardFpsNote">每秒送到 UNO Q 的畫面數</span>
+          </article>
+          <article class="stat-item">
+            <p>USB 資料量</p>
+            <strong id="dataRateValue">0 KB/s</strong>
+            <span>目前每秒傳送的資料量</span>
+          </article>
+          <article class="stat-item">
+            <p>送出影像</p>
+            <strong id="resolutionValue">320 × 240</strong>
+            <span>實際送給 UNO Q 的大小</span>
+          </article>
+          <article class="stat-item">
+            <p>已執行</p>
+            <strong id="uptimeValue">00:00</strong>
+            <span>這次測試經過的時間</span>
+          </article>
+          <article class="stat-item">
+            <p>跳過畫面</p>
+            <strong id="skippedValue">0 張</strong>
+            <span>忙碌或斷線時沒有送出的畫面</span>
+          </article>
+          <article class="stat-item ai-stat">
+            <p>AI 看到</p>
+            <strong id="aiFacesValue">等待畫面</strong>
+            <span id="aiConfidenceValue">信心度 —</span>
+          </article>
+        </div>
+      </section>
+      <section class="video-grid" aria-label="攝影機畫面與 AI 辨識結果">
+        <article class="video-card">
+          <div class="card-heading">
+            <div>
+              <p class="step">2. 筆電畫面</p>
+              <h2>原始攝影機</h2>
+            </div>
+            <span class="badge">筆電</span>
+          </div>
+          <div class="video-stage local-stage">
+            <video id="localVideo" autoplay muted playsinline></video>
+            <p id="localPlaceholder">按「開始辨識」後，畫面會出現在這裡。</p>
+          </div>
+        </article>
+
+        <article class="video-card">
+          <div class="card-heading">
+            <div>
+              <p class="step">3. UNO Q 結果</p>
+              <h2>AI 人臉框選</h2>
+            </div>
+            <span class="badge accent">UNO Q</span>
+          </div>
+          <div class="video-stage">
+            <iframe id="aiFrame" title="UNO Q AI 人臉辨識畫面"></iframe>
+            <p id="aiPlaceholder">AI 服務準備好後，這裡會顯示框選結果。</p>
+          </div>
+        </article>
+      </section>
+
+      <aside class="privacy-note">
+        <strong>隱私：</strong>本程式不會把照片存成檔案，板子只記錄「有沒有人」和累計時間。結束後請按「停止」，瀏覽器就會關閉攝影機。
+      </aside>
+
+      <canvas id="captureCanvas" width="320" height="240" hidden></canvas>
+    </main>
+
+    <script src="libs/socket.io.min.js"></script>
+    <script src="libs/arduino.js"></script>
+    <script src="app.js?v=classroom-1"></script>
+    <script src="pomodoro.js?v=focus-1"></script>
+  </body>
+</html>

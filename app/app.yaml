@@ -1,0 +1,13 @@
+name: FocusGuard 專注番茄鐘
+icon: 🍅
+description: 用筆電鏡頭經 USB 送畫面，UNO Q 在本機偵測人是否在座，自動控制番茄鐘並顯示在 LED 矩陣。
+
+ports:
+  - 8080
+
+bricks:
+  - arduino:video_object_detection:
+      model: face-detection
+      devices:
+        - remote_camera_0
+  - arduino:web_ui

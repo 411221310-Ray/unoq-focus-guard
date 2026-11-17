@@ -1,0 +1,16 @@
+# 影片檔太大，另外上傳
+video/
+
+# 金鑰、密碼一律不進 repo
+.env
+.env.*
+*.key
+*.pem
+secrets.*
+
+# 系統與編輯器雜檔
+__pycache__/
+*.pyc
+.vscode/
+.DS_Store
+Thumbs.db
